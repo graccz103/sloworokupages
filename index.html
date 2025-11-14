@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8" />
+    <title>Tier lista slangowych słów</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: radial-gradient(circle at top, #5337ff 0, #06061a 55%, #02010a 100%);
+            color: #f5f5ff;
+        }
+
+        main {
+            width: min(960px, 100% - 3rem);
+            background: rgba(7, 10, 40, 0.92);
+            border-radius: 24px;
+            padding: 24px 28px 28px;
+            box-shadow: 0 18px 60px rgba(0, 0, 0, 0.65);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            backdrop-filter: blur(16px);
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.25rem;
+        }
+
+        h1 {
+            font-size: 1.6rem;
+            letter-spacing: 0.04em;
+        }
+
+        .subtitle {
+            font-size: 0.9rem;
+            color: #c7c9ff;
+        }
+
+        .chip {
+            border-radius: 999px;
+            border: 1px solid rgba(185, 200, 255, 0.4);
+            padding: 4px 10px;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: #d7deff;
+            background: radial-gradient(circle at top left, rgba(141, 167, 255, 0.28), rgba(10, 10, 32, 0.8));
+        }
+
+        .layout {
+            display: grid;
+            grid-template-columns: 1.5fr 1fr;
+            gap: 1.4rem;
+        }
+
+        @media (max-width: 780px) {
+            .layout {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .panel {
+            background: radial-gradient(circle at top left, rgba(118, 122, 255, 0.3), rgba(10, 10, 40, 0.9));
+            border-radius: 18px;
+            padding: 14px 14px 16px;
+            border: 1px solid rgba(207, 215, 255, 0.2);
+        }
+
+        .panel h2 {
+            font-size: 0.95rem;
+            font-weight: 600;
+            margin-bottom: 0.4rem;
+        }
+
+        .panel p {
+            font-size: 0.78rem;
+            color: #c2c7ff;
+            margin-bottom: 0.75rem;
+        }
+
+        #tiers {
+            display: flex;
+            flex-direction: column;
+            gap: 0.45rem;
+            max-height: 430px;
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+
+        .tier-row {
+            display: grid;
+            grid-template-columns: auto minmax(0, 1fr);
+            gap: 0.6rem;
+            align-items: stretch;
+        }
+
+        .tier-label {
+            min-width: 80px;
+            max-width: 120px;
+            padding: 6px 10px;
+            border-radius: 999px;
+            background: rgba(10, 11, 40, 0.95);
+            border: 1px solid rgba(246, 231, 139, 0.9);
+            font-size: 0.8rem;
+            font-weight: 700;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            text-align: center;
+            cursor: text;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .tier-label:focus-visible {
+            outline: 2px solid rgba(255, 220, 155, 0.9);
+        }
+
+        .tier-words {
+            min-height: 40px;
+            padding: 5px 7px;
+            border-radius: 999px;
+            background: rgba(5, 9, 35, 0.9);
+            border: 1px dashed rgba(152, 176, 255, 0.7);
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .tier-words.drag-over {
+            background: rgba(30, 40, 90, 0.95);
+            border-style: solid;
+        }
+
+        .word-chip {
+            padding: 4px 10px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(190, 205, 255, 0.85);
+            font-size: 0.82rem;
+            white-space: nowrap;
+            cursor: grab;
+            user-select: none;
+        }
+
+        .word-chip:active {
+            cursor: grabbing;
+        }
+
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 0.6rem;
+        }
+
+        button {
+            border: none;
+            border-radius: 999px;
+            padding: 7px 14px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+        }
+
+        #add-tier-btn {
+            background: linear-gradient(120deg, #ffb347, #ff5f9a);
+            color: #120819;
+            box-shadow: 0 8px 22px rgba(0, 0, 0, 0.55);
+        }
+
+        #reset-btn {
+            background: rgba(10, 15, 50, 0.9);
+            color: #e5e8ff;
+            border: 1px solid rgba(166, 184, 255, 0.7);
+        }
+
+        #export-btn {
+            background: rgba(6, 120, 98, 0.9);
+            color: #e5fffb;
+            border: 1px solid rgba(164, 242, 221, 0.9);
+        }
+
+        .hint {
+            font-size: 0.7rem;
+            color: #b9c0ff;
+            margin-top: 0.4rem;
+            opacity: 0.9;
+        }
+
+        #export-output {
+            margin-top: 0.6rem;
+            background: rgba(2, 7, 26, 0.95);
+            border-radius: 12px;
+            border: 1px solid rgba(120, 144, 255, 0.6);
+            padding: 8px 9px;
+            max-height: 260px;
+            overflow: auto;
+            font-size: 0.78rem;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+<main>
+    <header>
+        <div>
+            <h1>Tier lista slangowych słów</h1>
+            <p class="subtitle">Przeciągaj słowa między tierami (np. „S tier” na górze, „Gówno” na dole) i ustawiaj je w kolejności.</p>
+        </div>
+        <div class="chip">Drag & drop tier list</div>
+    </header>
+
+    <div class="layout">
+        <section class="panel">
+            <h2>1. Ustaw swoje tiery</h2>
+            <p>Możesz edytować nazwy tierów (kliknij w etykietę, np. zmień na „S tier” albo „Gówno”) i przeciągać słowa góra/dół.</p>
+            <div id="tiers"></div>
+            <div class="controls">
+                <button id="add-tier-btn" type="button">+ Dodaj tier</button>
+                <button id="reset-btn" type="button">Reset słów</button>
+            </div>
+            <p class="hint">Podpowiedź: złap słowo i przeciągnij je w inne miejsce – między tiery lub w obrębie tego samego tieru.</p>
+        </section>
+
+        <section class="panel">
+            <h2>2. Podgląd tekstowy</h2>
+            <p>Możesz skopiować tekstowy zapis swojej tier listy (np. do notatek):</p>
+            <button id="export-btn" type="button">Eksportuj tier listę</button>
+            <div id="export-output"></div>
+        </section>
+    </div>
+</main>
+
+<script>
+    const words = [
+        "6 7",
+        "BRAINROT",
+        "BRO",
+        "FR",
+        "FREAKY",
+        "GOAT",
+        "KLASA",
+        "LOWKEY",
+        "OKPA",
+        "SKIBIDI",
+        "SLAY",
+        "SZACUN",
+        "SZPONCIĆ / SZPONT",
+        "TUFF",
+        "TWIN"
+    ];
+
+    const defaultTiers = [
+        "S tier",
+        "A",
+        "B",
+        "Gówno"
+    ];
+
+    const tiersContainer = document.getElementById("tiers");
+    const exportOutput = document.getElementById("export-output");
+
+    let dragData = null; // { wordId, originTierId }
+    let wordIdCounter = 0;
+
+    function createTierRow(labelText) {
+        const tierId = `tier-${Math.random().toString(36).slice(2, 9)}`;
+
+        const row = document.createElement("div");
+        row.className = "tier-row";
+        row.dataset.tierId = tierId;
+
+        const label = document.createElement("div");
+        label.className = "tier-label";
+        label.contentEditable = "true";
+        label.spellcheck = false;
+        label.textContent = labelText;
+
+        const dropZone = document.createElement("div");
+        dropZone.className = "tier-words";
+        dropZone.dataset.tierId = tierId;
+
+        dropZone.addEventListener("dragover", (e) => {
+            e.preventDefault();
+            dropZone.classList.add("drag-over");
+        });
+
+        dropZone.addEventListener("dragleave", () => {
+            dropZone.classList.remove("drag-over");
+        });
+
+        dropZone.addEventListener("drop", (e) => {
+            e.preventDefault();
+            dropZone.classList.remove("drag-over");
+            if (!dragData) return;
+
+            const chip = document.querySelector(`\[data-word-id="${dragData.wordId}"]`);
+            if (!chip) return;
+
+            const afterElement = getDragAfterElement(dropZone, e.clientX, e.clientY);
+            if (afterElement == null) {
+                dropZone.appendChild(chip);
+            } else {
+                dropZone.insertBefore(chip, afterElement);
+            }
+        });
+
+        row.appendChild(label);
+        row.appendChild(dropZone);
+        tiersContainer.appendChild(row);
+
+        return dropZone;
+    }
+
+    function createWordChip(text) {
+        const chip = document.createElement("div");
+        chip.className = "word-chip";
+        chip.draggable = true;
+        chip.textContent = text;
+        chip.dataset.wordId = `w-${wordIdCounter++}`;
+
+        chip.addEventListener("dragstart", (e) => {
+            dragData = {
+                wordId: chip.dataset.wordId
+            };
+            e.dataTransfer.effectAllowed = "move";
+        });
+
+        chip.addEventListener("dragend", () => {
+            dragData = null;
+        });
+
+        return chip;
+    }
+
+    function getDragAfterElement(container, x, y) {
+        const draggableElements = [...container.querySelectorAll(".word-chip")];
+        let closest = { offset: Number.NEGATIVE_INFINITY, element: null };
+
+        draggableElements.forEach((child) => {
+            const rect = child.getBoundingClientRect();
+            const offset = y - (rect.top + rect.height / 2);
+            if (offset < 0 && offset > closest.offset) {
+                closest = { offset, element: child };
+            }
+        });
+
+        return closest.element;
+    }
+
+    function resetWords() {
+        const tierRows = tiersContainer.querySelectorAll(".tier-words");
+        tierRows.forEach((zone) => (zone.innerHTML = ""));
+
+        const middleTierIndex = Math.floor(defaultTiers.length / 2);
+        const middleTierId = tiersContainer.querySelectorAll(".tier-row")[middleTierIndex].dataset.tierId;
+        const middleZone = tiersContainer.querySelector(`.tier-words\[data-tier-id="${middleTierId}"]`);
+
+        words.forEach((w) => {
+            const chip = createWordChip(w);
+            middleZone.appendChild(chip);
+        });
+    }
+
+    function exportTierList() {
+        const rows = [...tiersContainer.querySelectorAll(".tier-row")];
+        const lines = [];
+
+        rows.forEach((row) => {
+            const label = row.querySelector(".tier-label").textContent.trim() || "(bez nazwy)";
+            const chips = [...row.querySelectorAll(".word-chip")].map((c) => c.textContent.trim());
+            const content = chips.length ? chips.join(", ") : "—";
+            lines.push(`${label}: ${content}`);
+        });
+
+        // Poprawiony separator linii: prawidłowy znak nowej linii "\n"
+        exportOutput.textContent = lines.join("\n");
+    }
+
+    // Proste testy kontrolne (dev-only) – logują błędy w konsoli, nie ingerują w UI
+    function runBasicTests() {
+        try {
+            const rows = [...tiersContainer.querySelectorAll(".tier-row")];
+            console.assert(rows.length >= defaultTiers.length, "Powinno istnieć co najmniej tyle wierszy, ile domyślnych tierów.");
+            const allChips = [...tiersContainer.querySelectorAll(".word-chip")];
+            console.assert(allChips.length === words.length, "Liczba chipów powinna odpowiadać liczbie słów.");
+            exportTierList();
+            console.assert(exportOutput.textContent.includes("S tier") || exportOutput.textContent.length > 0, "Eksport powinien generować niepusty tekst.");
+        } catch (e) {
+            console.error("Błąd w testach kontrolnych:", e);
+        }
+    }
+
+    function init() {
+        tiersContainer.innerHTML = "";
+        defaultTiers.forEach((t) => createTierRow(t));
+        resetWords();
+        exportTierList();
+        runBasicTests();
+    }
+
+    document.getElementById("add-tier-btn").addEventListener("click", () => {
+        createTierRow("Nowy tier");
+        tiersContainer.scrollTop = tiersContainer.scrollHeight;
+        exportTierList();
+    });
+
+    document.getElementById("reset-btn").addEventListener("click", () => {
+        resetWords();
+        exportTierList();
+    });
+
+    document.getElementById("export-btn").addEventListener("click", exportTierList);
+
+    init();
+</script>
+</body>
+</html>
